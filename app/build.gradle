@@ -21,6 +21,7 @@ android {
         }
 
         debug {
+            applicationIdSuffix "debug"
             manifestPlaceholders.APP_NAME = projectName + "-debug"
             buildConfigField 'String', 'APP_NAME', '"' + projectName + '-debug"'
             minifyEnabled false
