@@ -63,8 +63,11 @@ case "$1" in
         check_NDK
         TCVER=("${NDK}"/toolchains/aarch64-linux-android-4.*)
         NDKP=${TCVER[0]}/prebuilt/${HOST_ARCH}/bin/aarch64-linux-android-
-        NDKF="--sysroot ${NDK}/platforms/android-${NDKABI}/arch-arm64"
-        make -C luajit install HOST_CC="gcc" CFLAGS="-O2 -pipe" HOST_CFLAGS="-O2 -pipe -mtune=generic" LDFLAGS="" HOST_LDFLAGS="" TARGET_CFLAGS="${CFLAGS}" TARGET_LDFLAGS="${LDFLAGS}" CROSS="$NDKP" TARGET_FLAGS="${NDKF}" TARGET_SYS=Linux DESTDIR="$DEST" PREFIX=
+        #NDKF="--sysroot ${NDK}/platforms/android-${NDKABI}/arch-arm64"
+        NDKCC=${TCVER[0]}/../llvm/prebuilt/${HOST_ARCH}/bin/aarch64-linux-android${NDKABI}-clang
+        make -C luajit install HOST_CC="gcc" CFLAGS="-O2 -pipe" HOST_CFLAGS="-O2 -pipe -mtune=generic" LDFLAGS="" HOST_LDFLAGS="" TARGET_CFLAGS="${CFLAGS}" TARGET_LDFLAGS="${LDFLAGS}" CROSS="$NDKP" TARGET_FLAGS="${NDKF}" TARGET_SYS=Linux \
+        TARGET_CC="${NDKCC}" TARGET_DYNCC="${NDKCC}" TARGET_STCC="${NDKCC}" TARGET_LD="${NDKCC}" \
+        DESTDIR="$DEST" PREFIX=
         ;;
     x86)
         # Android/x86, x86 (i686 SSE3)
