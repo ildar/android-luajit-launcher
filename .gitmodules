@@ -4,3 +4,6 @@
 [submodule "jni/lzma/7z"]
 	path = jni/lzma/7z
 	url = https://github.com/kornelski/7z.git
+[submodule "jni/modules/luasocket/luasocket"]
+	path = jni/modules/luasocket/luasocket
+	url = https://github.com/diegonehab/luasocket

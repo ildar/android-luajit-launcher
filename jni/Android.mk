@@ -42,3 +42,4 @@ LOCAL_EXPORT_LDLIBS := -lm -llog -landroid
 
 include $(BUILD_SHARED_LIBRARY)
 
+include $(LOCAL_PATH)/modules/Android.mk
