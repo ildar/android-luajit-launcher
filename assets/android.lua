@@ -2420,7 +2420,7 @@ local function run(android_app_state)
     -- set absolute cpath
     package.cpath = "?.so;"..android.dir.."/?.so;"
     -- register the asset loader
-    table.insert(package.loaders, 2, android.asset_loader)
+    table.insert(package.loaders, #package.loaders-1, android.asset_loader)
 
     -- load the dlopen() implementation
     android.dl = require("dl")
@@ -2429,7 +2429,7 @@ local function run(android_app_state)
         "/lib:/system/lib:/lib/lib?.so:/system/lib/lib?.so"
 
     -- register the dependency lib loader
-    table.insert(package.loaders, 3, android.deplib_loader)
+    table.insert(package.loaders, #package.loaders-1, android.deplib_loader)
 
     -- ffi.load wrapper
     local ffi_load = ffi.load
