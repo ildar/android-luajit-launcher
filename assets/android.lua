@@ -2372,7 +2372,7 @@ local function run(android_app_state)
             jni.env[0].DeleteLocalRef(jni.env, process)
             jni.env[0].DeleteLocalRef(jni.env, stdout)
             jni.env[0].DeleteLocalRef(jni.env, stderr)
-            return res
+            return res, out, err
         end)
     end
 
