@@ -1360,13 +1360,23 @@ The C code will call this function.
 local function run(android_app_state)
     android.app = ffi.cast("struct android_app*", android_app_state)
 
-    android.dir, android.nativeLibraryDir =
-        JNI:context(android.app.activity.vm, function(jni)
+    android.dir, android.externalFilesDir, android.nativeLibraryDir =
+        JNI:context(android.app.activity.vm, function(jni, s_type)
             local files_dir = jni:callObjectMethod(
                 jni:callObjectMethod(
                     android.app.activity.clazz,
                     "getFilesDir",
                     "()Ljava/io/File;"
+                ),
+                "getAbsolutePath",
+                "()Ljava/lang/String;"
+            )
+            local external_files_dir = jni:callObjectMethod(
+                jni:callObjectMethod(
+                    android.app.activity.clazz,
+                    "getExternalFilesDir",
+                    "(Ljava/lang/String;)Ljava/io/File;",
+                    s_type or jni.env[0].NewStringUTF(jni.env, s_type)
                 ),
                 "getAbsolutePath",
                 "()Ljava/lang/String;"
@@ -1392,6 +1402,7 @@ local function run(android_app_state)
             )
             return
                 jni:to_string(files_dir),
+                jni:to_string(external_files_dir),
                 jni:to_string(jni:getObjectField(app_info, "nativeLibraryDir", "Ljava/lang/String;"))
         end)
 
@@ -2416,9 +2427,14 @@ local function run(android_app_state)
     package.loaded.android = android
 
     -- set up a sensible package.path
-    package.path = "?.lua;"..android.dir.."/?.lua;"
+    package.path = "?.lua;" ..
+      android.externalFilesDir .. "/?.lua;" ..
+      android.dir.."/?.lua;"
     -- set absolute cpath
-    package.cpath = "?.so;"..android.dir.."/?.so;"
+    package.cpath = "?.so;" ..
+      android.externalFilesDir .. "/?.so;" ..
+      android.dir.."/?.so;" ..
+      android.nativeLibraryDir .. "/lib?.so;"
     -- register the asset loader
     table.insert(package.loaders, #package.loaders-1, android.asset_loader)
 
