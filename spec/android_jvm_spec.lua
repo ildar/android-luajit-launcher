@@ -65,11 +65,24 @@ describe("#BasicTests : `android` module with JVM access", function()
       assert.truthy( out:find("Linux") )
     end)
   
-  it("can show a Toast",
+  it("can handle exceptions in jvm",
     function()
-      android.notification "Hello, Android world!"
-      -- nothing to check if no errors
-      -- check the device screen instead
+      local fn_FindClass_str = [[
+        name = ...
+        return android.jni:jpcallInContext(function(jni)
+          return jni.env[0].FindClass(jni.env, name)
+        end)
+      ]]
+      local remFindClass = client.loadstring( fn_FindClass_str )
+      assert.is_not.equal(nil, remFindClass, "failed to push fn remFindClass() to server")
+      assert.equal('function', remFindClass.__tango_type)
+      local ok, aClazz = remFindClass("java/lang/String")
+      assert.equal(true, ok)
+      assert.equal("cdata<void *>", aClazz.__tango_type)
+      ok, aClazz = remFindClass("java/lang/NONEXISTANT")
+      assert.equal(false, ok)
+      assert.equal("string", type(aClazz))
+      assert.truthy(aClazz:find("Didn't find class"))
     end)
 
 end)

@@ -1163,6 +1163,41 @@ function JNI:context(jvm, runnable)
     return unpack(result)
 end
 
+--[[
+  JNI:jpcallInContext(runnable) does only partially protected calls to JVM. It
+  is the version of JNI:context(jvm, runnable) that only checks and clears
+  Exception status and message if occured during runnable().
+  NOTE that it is still unable to protect situations when runnable() makes
+  second JVM call after an Exception occured.
+]]
+function JNI:jpcallInContext(runnable)
+    local env = ffi.new("JNIEnv*[1]")
+    self.jvm[0].GetEnv(self.jvm, ffi.cast("void**", env), ffi.C.JNI_VERSION_1_6)
+
+    assert(self.jvm[0].AttachCurrentThread(self.jvm, env, nil) ~= ffi.C.JNI_ERR,
+        "cannot attach JVM to current thread")
+
+    self.env = env[0]
+    local result, e = { runnable(self) }, self.env[0].ExceptionCheck(self.env)
+    if e == 0 then
+      e = nil
+    else
+      local ex = self.env[0].ExceptionOccurred(self.env)
+      self.env[0].ExceptionClear(self.env)
+      e = self:to_string(
+        self:callObjectMethod(ex, "getMessage", "()Ljava/lang/String;")
+        )
+    end
+    self.jvm[0].DetachCurrentThread(self.jvm)
+    self.env = nil
+
+    if e == nil then
+      return true, unpack(result)
+    else
+      return false, e
+    end
+end
+
 function JNI:callVoidMethod(object, method, signature, ...)
     local clazz = self.env[0].GetObjectClass(self.env, object)
     local methodID = self.env[0].GetMethodID(self.env, clazz, method, signature)
@@ -1359,6 +1394,7 @@ The C code will call this function.
 --]]
 local function run(android_app_state)
     android.app = ffi.cast("struct android_app*", android_app_state)
+    JNI.jvm = android.app.activity.vm
 
     android.dir, android.externalFilesDir, android.nativeLibraryDir =
         JNI:context(android.app.activity.vm, function(jni, s_type)
